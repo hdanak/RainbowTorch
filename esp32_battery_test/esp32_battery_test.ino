@@ -35,7 +35,7 @@ const size_t LED_COUNT = 120;
 const uint8_t BRIGHTNESS = 127;
 
 const float VBAT_MULT = 2.f;
-const float VUSB_MULT = 8.35f;
+const float VUSB_MULT = 7.8f;
 
 const float MIN_VBAT = 3.2;
 const float MIN_VBAT_HIST = 0.2;
@@ -61,15 +61,14 @@ void taskLedRenderer(void *);
 void setup() {
   pinMode(PIN_VBAT_IN, INPUT);
   pinMode(PIN_VUSB_IN, INPUT);
-//  pinMode(PIN_USB_POWER_EN, OUTPUT);
-  pinMode(PIN_BAT_POWER_EN, OUTPUT);
+  pinMode(PIN_LED_POWER_EN, OUTPUT);
   pinMode(PIN_LED_WS, OUTPUT);
   pinMode(PIN_LED_MOSI, OUTPUT);
   pinMode(PIN_LED_SCLK, OUTPUT);
 
   // LEDs powered off
 //  digitalWrite(PIN_USB_POWER_EN, 0);
-  digitalWrite(PIN_BAT_POWER_EN, 0);
+  digitalWrite(PIN_LED_POWER_EN, 0);
 
   Serial.begin(115200);
   Serial.println();
@@ -128,20 +127,21 @@ void taskPowerControl(void *) {
 
     if (vBat < MIN_VBAT) {
       battery_low = true;
-      digitalWrite(PIN_BAT_POWER_EN, 0);
+      digitalWrite(PIN_LED_POWER_EN, 0);
     }
     else if (vBat > MIN_VBAT + MIN_VBAT_HIST) {
       battery_low = false;
 
       if (!usb_power_mode) {
-        digitalWrite(PIN_BAT_POWER_EN, 1);
+        digitalWrite(PIN_LED_POWER_EN, 1);
       }
     }
-  
+
+/*
     if (!usb_power_mode && usb_plugged_in) {
       Serial.println("Switching LEDs to USB power");
       // disable battery power
-      digitalWrite(PIN_BAT_POWER_EN, 0);
+      digitalWrite(PIN_LED_POWER_EN, 0);
       // enable USB power
 //      digitalWrite(PIN_USB_POWER_EN, 1);
   
@@ -152,10 +152,11 @@ void taskPowerControl(void *) {
       // disable USB power
 //      digitalWrite(PIN_USB_POWER_EN, 0);
       // enable battery power
-      digitalWrite(PIN_BAT_POWER_EN, 1);
+      digitalWrite(PIN_LED_POWER_EN, 1);
   
       usb_power_mode = false;
     }
+*/
 
     delay(1);
   }
