@@ -22,9 +22,8 @@
 
 #define PIN_VBAT_IN         33
 #define PIN_VUSB_IN         32
-//#define PIN_USB_POWER_EN    33
-#define PIN_BAT_POWER_EN    26
-#define PIN_LED_WS          16
+#define PIN_LED_POWER_EN    26
+#define PIN_LED_WS          27
 #define PIN_LED_MOSI        4
 #define PIN_LED_SCLK        13
 #define PIN_MPU_SDA         23
@@ -67,7 +66,6 @@ void setup() {
   pinMode(PIN_LED_SCLK, OUTPUT);
 
   // LEDs powered off
-//  digitalWrite(PIN_USB_POWER_EN, 0);
   digitalWrite(PIN_LED_POWER_EN, 0);
 
   Serial.begin(115200);
@@ -111,6 +109,18 @@ void taskPowerControl(void *) {
     float vUSB = analogReadMilliVolts(PIN_VUSB_IN) * VUSB_MULT / 1000;
     bool usb_plugged_in = vUSB > 4;
 
+    // TODO check actual PD mode
+    usb_power_mode = usb_plugged_in;
+
+    if (vBat < MIN_VBAT) {
+      battery_low = true;
+      digitalWrite(PIN_LED_POWER_EN, 0);
+    }
+    else if (vBat > MIN_VBAT + MIN_VBAT_HIST) {
+      battery_low = false;
+      digitalWrite(PIN_LED_POWER_EN, 1);
+    }
+
     if (run_count % 1000 == 0) {
       Serial.println("vBat\tvUSB\tUSB_IN\tUSB_EN\tLOW_BAT");
       Serial.print(vBat);
@@ -123,40 +133,6 @@ void taskPowerControl(void *) {
       Serial.print('\t');
       Serial.println(battery_low);
     }
-
-
-    if (vBat < MIN_VBAT) {
-      battery_low = true;
-      digitalWrite(PIN_LED_POWER_EN, 0);
-    }
-    else if (vBat > MIN_VBAT + MIN_VBAT_HIST) {
-      battery_low = false;
-
-      if (!usb_power_mode) {
-        digitalWrite(PIN_LED_POWER_EN, 1);
-      }
-    }
-
-/*
-    if (!usb_power_mode && usb_plugged_in) {
-      Serial.println("Switching LEDs to USB power");
-      // disable battery power
-      digitalWrite(PIN_LED_POWER_EN, 0);
-      // enable USB power
-//      digitalWrite(PIN_USB_POWER_EN, 1);
-  
-      usb_power_mode = true;
-    }
-    if (usb_power_mode && !usb_plugged_in) {
-      Serial.println("Switching LEDs to battery power");
-      // disable USB power
-//      digitalWrite(PIN_USB_POWER_EN, 0);
-      // enable battery power
-      digitalWrite(PIN_LED_POWER_EN, 1);
-  
-      usb_power_mode = false;
-    }
-*/
 
     delay(1);
   }
